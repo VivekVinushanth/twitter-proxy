@@ -66,7 +66,7 @@ async function fetchFromXApi(token, accounts, proxyUrl) {
   for (let i = 0; i < accounts.length; i += batchSize) {
     const batch = accounts.slice(i, i + batchSize);
     const query = batch.map((a) => `from:${a}`).join(" OR ");
-    const baseUrl = proxyUrl || "https://api.x.com";
+    const baseUrl = proxyUrl || "";
     const params = new URLSearchParams({
       query,
       "tweet.fields": "created_at,public_metrics,author_id,conversation_id",
