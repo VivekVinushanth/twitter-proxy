@@ -10,10 +10,7 @@ const TABS = [
   { id: "opinion", label: "Opinion" },
 ];
 
-const DEFAULT_ACCOUNTS = [
-  "Reuters", "AP", "BBCBreaking", "business", "TheEconomist",
-  "FT", "AJEnglish", "nprpolitics", "WSJ", "nytimes",
-];
+const DEFAULT_ACCOUNTS = [];
 
 // Simple keyword-based categorizer
 function categorize(text) {
@@ -80,9 +77,19 @@ async function fetchFromXApi(token, accounts, proxyUrl) {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    if (!resp.ok) {
+    if (!resp.ok && resp.status !== 304) {
       const errBody = await resp.text().catch(() => "");
       throw new Error(`X API ${resp.status}: ${errBody.substring(0, 200) || resp.statusText}`);
+    }
+
+    const contentType = resp.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      const body = await resp.text().catch(() => "");
+      throw new Error(
+        body.includes("<!DOCTYPE") || body.includes("<html")
+          ? "Proxy returned an HTML page instead of JSON. Check that your proxy URL is correct and running."
+          : `Unexpected response type (${contentType}): ${body.substring(0, 200)}`
+      );
     }
 
     const json = await resp.json();
